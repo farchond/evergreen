@@ -209,12 +209,24 @@ class Grid extends React.Component{
   }
 }
 
+class Toolbar extends React.Component{
+  render() {
+    return (
+      React.createElement("div", null, 
+        React.createElement("div", null, " hello "), 
+        React.createElement("input", {type: "checkbox", checked: true, "data-toggle": "toggle", "data-size": "normal"})
+      )
+    )
+  }
+}
+
 // The Root class renders all components on the waterfall page, including the grid view and the filter and new page buttons
 // The one exception is the header, which is written in Angular and managed by menu.html
 class Root extends React.Component{
   render() {
     return (
       React.createElement("div", null, 
+        React.createElement(Toolbar, {data: this.props.data}), 
         React.createElement(Grid, {data: this.props.data})
       )
     )
