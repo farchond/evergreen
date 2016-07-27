@@ -298,6 +298,7 @@ h3.section-heading {
 }
 .system-failed {
   background-color: #800080;
+  color: white;
 }
 .unstarted {
   background-color: #bfbfbe;
@@ -1930,7 +1931,10 @@ pre {
   background-color: #999;
 }
 .variant-row {
-  margin-bottom: 20px;
+  margin-bottom: 15px;
+}
+.builds-row {
+  background-color: #ffffff;
 }
 .distro-col {
   text-align: right;
@@ -1940,7 +1944,6 @@ pre {
   display: inline-block;
 }
 .build {
-  background-color: #ffffff;
   padding-top: 14px;
   padding-bottom: 8px;
   padding-left: 6px;
@@ -1948,8 +1951,8 @@ pre {
   width: 20%;
   float: left;
 }
-.full-grid {
-  background-color: #ff0000;
+.waterfall-grid {
+  background-color: #f3f3f3;
 }
 .version-header {
   height: auto;
@@ -2018,19 +2021,26 @@ pre {
 }
 .waterfall-box {
   float: left;
+  margin-left: 1px;
+  margin-bottom: 1px;
 }
 .task-result {
   display: table-cell;
   height: 14px;
   width: 14px;
-  border-left: 1px solid rgba(255, 255, 255, 0.75);
-  border-bottom: 1px solid #ffffff;
 }
 .task-result:hover {
   opacity: .8;
 }
-.full-bar {
-  height: 14px;
+.collapsed-view-bar {
+  height: 10px;
+  width: 100%;
+}
+.task-summary {
+  width: 16.66%;
+  float: left;
+  text-align: center;
+  margin-bottom: 10px;
 }
 .build-summary {
   height: 23px;
@@ -2055,7 +2065,6 @@ pre {
   }
   .filter {
     width: 100%;
-    margin-bottom: 15px;
   }
 }
 .active-elt-colors {

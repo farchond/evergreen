@@ -61,6 +61,18 @@ class PartialProgressBar extends React.Component {
   }
 }
 
+class Summary extends React.Component {
+  render() {
+    var status = this.props.status;
+    console.log(status);
+    return (
+      <div className={status + " task-summary"}>
+      {this.props.taskNum}
+      </div>
+    )
+  }
+}
+
 // A CollapsedBuild contains a set of PartialProgressBars, which in turn make up a full progress bar
 // We iterate over the 6 different main types of task statuses, each of which have a different color association
 class CollapsedBuild extends React.Component {
@@ -71,19 +83,23 @@ class CollapsedBuild extends React.Component {
     var taskTypes = [ 
                       ["success"      , taskStats.succeeded], 
                       ["failed"       , taskStats.failed], 
-                      ["started"      , taskStats.started], 
+                      ["dispatched"      , taskStats.started], 
                       ["system-failed", taskStats.timed_out],
                       ["undispatched" , taskStats.undispatched], 
                       ["inactive"     , taskStats.inactive]
                     ];
 
+    taskTypes = _.filter(taskTypes,((x => { 
+      return x[1] > 0;
+    })));
+
     var total = build.tasks.length;
 
     return (
-      <div className="full-bar">
+      <div className="collapsed-view-bar">
         {
           taskTypes.map((x) => {
-            return <PartialProgressBar key={x[0]} total={total} status={x[0]} taskNum={x[1]} />
+            return <Summary key={x[0]} total={total} status={x[0]} taskNum={x[1]} />
           }) 
         }
       </div>
@@ -94,7 +110,7 @@ class CollapsedBuild extends React.Component {
 // All tasks are inactive, so we display the words "inactive build"
 class InactiveBuild extends React.Component {
   render() {
-    return <div className="inactive-build build-row"> inactive build </div>;
+    return <div className="inactive-build"> inactive build </div>;
   }
 }
 
@@ -137,18 +153,15 @@ class Build extends React.Component{
       return <InactiveBuild />;
     }
    
-    var isCollapsed = true; //Will add switch to change isCollapsed state 
- 
+    var isCollapsed = false; //Will add switch to change isCollapsed state 
     
     if (isCollapsed) {
       var tasksToShow = ['failed','sytem-failed']; //Can be modified to show combinations of tasks by statuses
       return (
         <div className="build">
-          
           <ActiveBuild filters={tasksToShow} data={this.props.data} versionIndex={this.props.versionIndex} variantIndex={this.props.variantIndex} />
           
           <CollapsedBuild data={this.props.data} versionIndex={this.props.versionIndex} variantIndex={this.props.variantIndex}/>
-
         </div>
       )
     } 
@@ -174,7 +187,7 @@ class Variant extends React.Component{
       <div className="row variant-row">
 
         {/* column of build names */}
-        <div className={"col-xs-2" + " build-variant-name" + " distro-col"}> 
+        <div className="col-xs-2 build-variant-name distro-col"> 
           <a href={"/build_variant/" + project + "/" + variantId}>
             {this.props.variantDisplayName} 
           </a> 
@@ -182,7 +195,7 @@ class Variant extends React.Component{
 
         {/* 5 columns of versions */}
         <div className="col-xs-10"> 
-          <div className="row" style={{backgroundColor:'#ffffff'}}>
+          <div className="row builds-row">
             {
               data.versions.map((x,i) => {
                 return <Build key={x.ids[0]} data={data} variantIndex={variantIndex} versionIndex={i} />;
@@ -201,22 +214,13 @@ class Grid extends React.Component{
   render() {
     var data = this.props.data;
     return (
-         <div classID="wrapper " style={{height: '100%',backgroundColor : '#f3f3f3'}} > 
-         {
+      <div className="waterfall-grid">
+        {
           this.props.data.build_variants.map((x, i) => {
             return <Variant key={x} data={data} variantIndex={i} variantDisplayName={x} />;
           })
-         }
-            </div> 
-    )
-    return (
-         <div classID="wrapper " style={{backgroundColor : '#f3f3f3'}} > 
-         {
-          this.props.data.build_variants.map((x, i) => {
-            return <Variant key={x} data={data} variantIndex={i} variantDisplayName={x} />;
-          })
-         }
-            </div> 
+        }
+      </div> 
     )
   }
 }

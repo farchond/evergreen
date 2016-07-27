@@ -5,15 +5,16 @@
 @cell-height-minus-padding: @cell-height - @cell-height-padding * 2;
 
 .variant-row {
-  margin-bottom: 20px;
-//  background-color: #00ff00;
- // margin-top: 20px;
+  margin-bottom: 15px;
+}
+
+.builds-row {
+  background-color: #ffffff;
 }
 
 .distro-col {
  text-align: right;
  height: 100%;
- //background-color: #ff0000;
 }
 
 .active-build {
@@ -21,7 +22,6 @@
 }
 
 .build {
-  background-color: #ffffff;
   padding-top: 14px;
   padding-bottom: 8px;
   padding-left: 6px;
@@ -30,8 +30,8 @@
   float: left;
 }
 
-.full-grid {
-  background-color: #ff0000;
+.waterfall-grid {
+  background-color: #f3f3f3;
 }
 
 .version-header {
@@ -109,22 +109,29 @@
 
 .waterfall-box {
   float: left;
+  margin-left: 1px;
+  margin-bottom: 1px;
 }
 
 .task-result{
   display: table-cell;
   height: @cell-height-minus-padding;
   width: @cell-height-minus-padding;
-
-  border-left: 1px solid rgba(255,255,255,0.75);
-  border-bottom: 1px solid rgba(255,255,255,1);
   &:hover {
     opacity: .8;
   }
 }
 
-.full-bar {
-  height: @cell-height-minus-padding; 
+.collapsed-view-bar {
+  height: 10px; 
+  width: 100%;
+}
+
+.task-summary {
+  width: 16.66%;
+  float: left;
+  text-align: center;
+  margin-bottom: 10px;
 }
 
 .build-summary {
@@ -140,10 +147,8 @@
   color: @gray6;
   font-weight: bold;
   font-size: 12px;
- // font-family: monospace;
   text-align: center;
   padding-top: 12px;
- // height: 54px;
   width: 20%;
   float: left;
 }
@@ -154,7 +159,7 @@
   }
   .filter {
     width: 100%;
-    margin-bottom: 15px;
+  //  margin-bottom: 15px;
   }
 }
 

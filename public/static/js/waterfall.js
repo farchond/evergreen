@@ -61,6 +61,18 @@ class PartialProgressBar extends React.Component {
   }
 }
 
+class Summary extends React.Component {
+  render() {
+    var status = this.props.status;
+    console.log(status);
+    return (
+      React.createElement("div", {className: status + " task-summary"}, 
+      this.props.taskNum
+      )
+    )
+  }
+}
+
 // A CollapsedBuild contains a set of PartialProgressBars, which in turn make up a full progress bar
 // We iterate over the 6 different main types of task statuses, each of which have a different color association
 class CollapsedBuild extends React.Component {
@@ -71,19 +83,23 @@ class CollapsedBuild extends React.Component {
     var taskTypes = [ 
                       ["success"      , taskStats.succeeded], 
                       ["failed"       , taskStats.failed], 
-                      ["started"      , taskStats.started], 
+                      ["dispatched"      , taskStats.started], 
                       ["system-failed", taskStats.timed_out],
                       ["undispatched" , taskStats.undispatched], 
                       ["inactive"     , taskStats.inactive]
                     ];
 
+    taskTypes = _.filter(taskTypes,((x => { 
+      return x[1] > 0;
+    })));
+
     var total = build.tasks.length;
 
     return (
-      React.createElement("div", {className: "full-bar"}, 
+      React.createElement("div", {className: "collapsed-view-bar"}, 
         
           taskTypes.map((x) => {
-            return React.createElement(PartialProgressBar, {key: x[0], total: total, status: x[0], taskNum: x[1]})
+            return React.createElement(Summary, {key: x[0], total: total, status: x[0], taskNum: x[1]})
           }) 
         
       )
@@ -94,7 +110,7 @@ class CollapsedBuild extends React.Component {
 // All tasks are inactive, so we display the words "inactive build"
 class InactiveBuild extends React.Component {
   render() {
-    return React.createElement("div", {className: "inactive-build build-row"}, " inactive build ");
+    return React.createElement("div", {className: "inactive-build"}, " inactive build ");
   }
 }
 
@@ -137,18 +153,15 @@ class Build extends React.Component{
       return React.createElement(InactiveBuild, null);
     }
    
-    var isCollapsed = true; //Will add switch to change isCollapsed state 
- 
+    var isCollapsed = false; //Will add switch to change isCollapsed state 
     
     if (isCollapsed) {
       var tasksToShow = ['failed','sytem-failed']; //Can be modified to show combinations of tasks by statuses
       return (
         React.createElement("div", {className: "build"}, 
-          
           React.createElement(ActiveBuild, {filters: tasksToShow, data: this.props.data, versionIndex: this.props.versionIndex, variantIndex: this.props.variantIndex}), 
           
           React.createElement(CollapsedBuild, {data: this.props.data, versionIndex: this.props.versionIndex, variantIndex: this.props.variantIndex})
-
         )
       )
     } 
@@ -174,7 +187,7 @@ class Variant extends React.Component{
       React.createElement("div", {className: "row variant-row"}, 
 
         /* column of build names */
-        React.createElement("div", {className: "col-xs-2" + " build-variant-name" + " distro-col"}, 
+        React.createElement("div", {className: "col-xs-2 build-variant-name distro-col"}, 
           React.createElement("a", {href: "/build_variant/" + project + "/" + variantId}, 
             this.props.variantDisplayName
           )
@@ -182,7 +195,7 @@ class Variant extends React.Component{
 
         /* 5 columns of versions */
         React.createElement("div", {className: "col-xs-10"}, 
-          React.createElement("div", {className: "row", style: {backgroundColor:'#ffffff'}}, 
+          React.createElement("div", {className: "row builds-row"}, 
             
               data.versions.map((x,i) => {
                 return React.createElement(Build, {key: x.ids[0], data: data, variantIndex: variantIndex, versionIndex: i});
@@ -201,22 +214,13 @@ class Grid extends React.Component{
   render() {
     var data = this.props.data;
     return (
-         React.createElement("div", {classID: "wrapper ", style: {height: '100%',backgroundColor : '#f3f3f3'}}, 
-         
+      React.createElement("div", {className: "waterfall-grid"}, 
+        
           this.props.data.build_variants.map((x, i) => {
             return React.createElement(Variant, {key: x, data: data, variantIndex: i, variantDisplayName: x});
           })
-         
-            ) 
-    )
-    return (
-         React.createElement("div", {classID: "wrapper ", style: {backgroundColor : '#f3f3f3'}}, 
-         
-          this.props.data.build_variants.map((x, i) => {
-            return React.createElement(Variant, {key: x, data: data, variantIndex: i, variantDisplayName: x});
-          })
-         
-            ) 
+        
+      ) 
     )
   }
 }
