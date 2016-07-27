@@ -2,6 +2,10 @@
   ReactJS code for the Waterfall page. Grid calls the Variant class for each distro, and the Variant class renders each build variant for every version that exists. In each build variant we iterate through all the tasks and render them as well. The row of headers is just a placeholder at the moment.
   */
 
+// Necessary libs
+//var React = require('react');
+//var ReactDOM = require('react-dom');
+
 // Given a version id, build id, and server data, returns the build associated with it 
 function getBuildByIds(versionId, buildId, data) {
   return data.versions[versionId].builds[buildId];
@@ -168,7 +172,8 @@ class Variant extends React.Component{
     var data = this.props.data;
     var variantIndex = this.props.variantIndex;
     var variantId = getBuildByIds(data.unrolledVersionIndex, variantIndex, data).build_variant.id;
-    
+ //   var varStyle = (variantIndex % 2 === 0) ?{ backgroundColor : '#ffffff' } : { backgroundColor : '#f1f1f1'};
+
     return (
       React.createElement("div", {className: "row variant-row"}, 
 
@@ -209,12 +214,34 @@ class Grid extends React.Component{
   }
 }
 
+class ToggleSwitch extends React.Component{
+
+  componentDidMount() {
+    console.log("hi");
+    // $( this.refs.toggleInput.getDOMNode() ).bootstrapToggle();
+    React.findDOMNode(this).bootstrapToggle();
+    console.log("bye");
+  }
+
+  render() {
+    return (
+      React.createElement("div", null, 
+        React.createElement("input", {ref: "toggleInput", type: "checkbox", "data-toggle": "toggle", "data-on": "On", "data-off": "Off"})
+      )
+    )
+  }
+}
+
 class Toolbar extends React.Component{
   render() {
     return (
       React.createElement("div", null, 
-        React.createElement("div", null, " hello "), 
-        React.createElement("input", {type: "checkbox", checked: true, "data-toggle": "toggle", "data-size": "normal"})
+        /*
+        <input type="checkbox" checked data-toggle="toggle" data-size="normal" />
+        <input id="toggle-one" checked type="checkbox" /> 
+        */
+        "Show Collapsed View", 
+        React.createElement("input", {type: "checkbox"})
       )
     )
   }
