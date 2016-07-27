@@ -72,7 +72,7 @@ class CollapsedBuild extends React.Component {
                       ["success"      , taskStats.succeeded], 
                       ["failed"       , taskStats.failed], 
                       ["started"      , taskStats.started], 
-                      ["system-failed"     , taskStats.timed_out],
+                      ["system-failed", taskStats.timed_out],
                       ["undispatched" , taskStats.undispatched], 
                       ["inactive"     , taskStats.inactive]
                     ];
@@ -94,7 +94,7 @@ class CollapsedBuild extends React.Component {
 // All tasks are inactive, so we display the words "inactive build"
 class InactiveBuild extends React.Component {
   render() {
-    return <div className="col-xs-2 inactive-build build-row"> inactive build </div>;
+    return <div className="inactive-build build-row"> inactive build </div>;
   }
 }
 
@@ -137,12 +137,13 @@ class Build extends React.Component{
       return <InactiveBuild />;
     }
    
-    var isCollapsed = false; //Will add switch to change isCollapsed state 
+    var isCollapsed = true; //Will add switch to change isCollapsed state 
+ 
     
     if (isCollapsed) {
-      var tasksToShow = ['failed']; //Can be modified to show combinations of tasks by statuses
+      var tasksToShow = ['failed','sytem-failed']; //Can be modified to show combinations of tasks by statuses
       return (
-        <div className="col-xs-2 build-row">
+        <div className="build">
           
           <ActiveBuild filters={tasksToShow} data={this.props.data} versionIndex={this.props.versionIndex} variantIndex={this.props.variantIndex} />
           
@@ -154,7 +155,7 @@ class Build extends React.Component{
     
     //We have an active, uncollapsed build 
     return (
-      <div className="col-xs-2 build-row">
+      <div className="build">
         <ActiveBuild data={this.props.data} versionIndex={this.props.versionIndex} variantIndex={this.props.variantIndex} />
       </div>
     )
@@ -171,7 +172,6 @@ class Variant extends React.Component{
     
     return (
       <div className="row variant-row">
-      <div style={{backgroundColor:'#ff0000', height:'100%'}}>
 
         {/* column of build names */}
         <div className={"col-xs-2" + " build-variant-name" + " distro-col"}> 
@@ -181,14 +181,15 @@ class Variant extends React.Component{
         </div>
 
         {/* 5 columns of versions */}
-        <div> 
-          {
-            data.versions.map((x,i) => {
-              return <Build key={x.ids[0]} data={data} variantIndex={variantIndex} versionIndex={i} />;
-            })
-          }
+        <div className="col-xs-10"> 
+          <div className="row" style={{backgroundColor:'#ffffff'}}>
+            {
+              data.versions.map((x,i) => {
+                return <Build key={x.ids[0]} data={data} variantIndex={variantIndex} versionIndex={i} />;
+              })
+            }
+          </div>
         </div>
-      </div>
 
       </div>
     )
@@ -200,13 +201,22 @@ class Grid extends React.Component{
   render() {
     var data = this.props.data;
     return (
-      <div classID="wrapper " style={{backgroundColor : '#f3f3f3'}} >
-        {
+         <div classID="wrapper " style={{height: '100%',backgroundColor : '#f3f3f3'}} > 
+         {
           this.props.data.build_variants.map((x, i) => {
             return <Variant key={x} data={data} variantIndex={i} variantDisplayName={x} />;
           })
-        }
-      </div>
+         }
+            </div> 
+    )
+    return (
+         <div classID="wrapper " style={{backgroundColor : '#f3f3f3'}} > 
+         {
+          this.props.data.build_variants.map((x, i) => {
+            return <Variant key={x} data={data} variantIndex={i} variantDisplayName={x} />;
+          })
+         }
+            </div> 
     )
   }
 }
