@@ -35,8 +35,8 @@ func skipValue(r *http.Request) (int, error) {
 	return strconv.Atoi(toSkipStr)
 }
 
-// Determine task status label. Warning/note to self, failed cases are untested.
-func statusLabel(task waterfallTask) string {
+// uiStatus determine task status label.
+func uiStatus(task waterfallTask) string {
 	switch task.Status {
 	case "started":
 		return "started"
@@ -82,17 +82,17 @@ type waterfallTask struct {
 // Id is the unique id for each build
 // BuildVariant stores the relevant data for the build variant of each build,
 // including the unique id and human readable display name
-// TaskStats holds all the data needed for the collapsed view of a build
+// TaskStatusCount holds all the data needed for the collapsed view of a build
 type waterfallBuild struct {
-	Id           string                `json:"id"`
-	BuildVariant waterfallBuildVariant `json:"build_variant"`
-	Tasks        []waterfallTask       `json:"tasks"`
-	TaskStats    waterfallTaskStats    `json:"waterfallTaskStats"`
+	Id              string                   `json:"id"`
+	BuildVariant    waterfallBuildVariant    `json:"build_variant"`
+	Tasks           []waterfallTask          `json:"tasks"`
+	TaskStatusCount waterfallTaskStatusCount `json:"waterfallTaskStatusCount"`
 }
 
 // struct to hold all the numbers for different task types
 // used by the front-end to show the rolled up view
-type waterfallTaskStats struct {
+type waterfallTaskStatusCount struct {
 	Succeeded    int `json:"succeeded"`
 	Failed       int `json:"failed"`
 	Started      int `json:"started"`
@@ -275,15 +275,8 @@ func getVersionsAndVariants(skip int, numVersionElements int, project *model.Pro
 						" (removed)"
 				}
 
-				//initialize and set TaskStats fields to zero
-				taskStats := waterfallTaskStats{
-					Succeeded:    0,
-					Failed:       0,
-					Started:      0,
-					Undispatched: 0,
-					Inactive:     0,
-				}
-				buildForWaterfall.TaskStats = taskStats
+				//initialize and set TaskStatusCount fields to zero
+				statusCount := waterfallTaskStatusCount{}
 
 				// add the tasks to the build
 				for _, task := range build.Tasks {
@@ -295,35 +288,26 @@ func getVersionsAndVariants(skip int, numVersionElements int, project *model.Pro
 						Activated:     task.Activated,
 						TimeTaken:     task.TimeTaken,
 					}
-					taskForWaterfall.Status = statusLabel(taskForWaterfall)
+					taskForWaterfall.Status = uiStatus(taskForWaterfall)
 
 					switch taskForWaterfall.Status {
 					case "success":
-						buildForWaterfall.TaskStats.Succeeded++
+						statusCount.Succeeded++
 					case "failed":
 						if taskForWaterfall.StatusDetails.TimedOut && taskForWaterfall.StatusDetails.Description == "heartbeat" {
-							buildForWaterfall.TaskStats.TimedOut++
+							statusCount.TimedOut++
 						} else {
-							buildForWaterfall.TaskStats.Failed++
+							statusCount.Failed++
 						}
 					case "started":
-						buildForWaterfall.TaskStats.Started++
+						statusCount.Started++
 					case "undispatched":
-						if taskForWaterfall.Activated {
-							buildForWaterfall.TaskStats.Undispatched++
-						} else {
-							buildForWaterfall.TaskStats.Inactive++
-						}
+						statusCount.Undispatched++
 					case "dispatched":
-						if taskForWaterfall.Activated {
-							buildForWaterfall.TaskStats.Started++
-						} else {
-							buildForWaterfall.TaskStats.Dispatched++
-						}
+						statusCount.Started++
 					case "inactive":
-						buildForWaterfall.TaskStats.Inactive++
+						statusCount.Inactive++
 					}
-
 					// if the task is inactive, set its status to inactive
 					if !task.Activated {
 						taskForWaterfall.Status = InactiveStatus
@@ -331,6 +315,8 @@ func getVersionsAndVariants(skip int, numVersionElements int, project *model.Pro
 
 					buildForWaterfall.Tasks = append(buildForWaterfall.Tasks, taskForWaterfall)
 				}
+
+				buildForWaterfall.TaskStatusCount = statusCount
 
 				activeVersion.Builds =
 					append(activeVersion.Builds, buildForWaterfall)

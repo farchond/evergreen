@@ -105,7 +105,7 @@ class Build extends React.Component{
       return React.createElement(InactiveBuild, null);
     }
    
-    var isCollapsed = true; // Will add switch to change isCollapsed state 
+    var isCollapsed = false; // Will add switch to change isCollapsed state 
     
     if (isCollapsed) {
       var tasksToShow = ['failed','sytem-failed']; // Can be modified to show combinations of tasks by statuses
@@ -166,12 +166,11 @@ class InactiveBuild extends React.Component {
 // A Task contains the information for a single task for a build, including the link to its page, and a tooltip
 class Task extends React.Component {
   render() {
-    var href = "/task/" + this.props.task.id;
     var status = this.props.task.status;
     var tooltipContent = this.props.task.display_name + " - " + status;
     return (
       React.createElement("div", {"data-tooltip": tooltipContent, className: "waterfall-box"}, 
-        React.createElement("a", {href: href, className: "task-result " + status})
+        React.createElement("a", {href: "/task/" + this.props.task.id, className: "task-result " + status})
       )
     )
   }
@@ -182,7 +181,7 @@ class Task extends React.Component {
 class CollapsedBuild extends React.Component {
   render() {
     var build = getBuildByIds(this.props.versionIndex, this.props.variantIndex, this.props.data);
-    var taskStats = build.waterfallTaskStats;
+    var taskStats = build.waterfallTaskStatusCount;
 
     var taskTypes = [ 
                       ["success"      , taskStats.succeeded], 
@@ -197,14 +196,11 @@ class CollapsedBuild extends React.Component {
       return x[1] > 0;
     })));
 
-    // Used for tooltips
-    var total = build.tasks.length;
-
     return (
       React.createElement("div", {className: "collapsed-bar"}, 
         
           taskTypes.map((x) => {
-            return React.createElement(TaskSummary, {key: x[0], total: total, status: x[0], taskNum: x[1]})
+            return React.createElement(TaskSummary, {key: x[0], total: build.tasks.length, status: x[0], taskNum: x[1]})
           }) 
         
       )
