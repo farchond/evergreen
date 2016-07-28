@@ -4,21 +4,23 @@
 @cell-height-padding: 2px;
 @cell-height-minus-padding: @cell-height - @cell-height-padding * 2;
 
+@tooltip-width: 150px;
+@tooltip-left: 0 - @tooltip-width / 2;
+
+.waterfall-grid {
+  background-color: #f3f3f3;
+}
+
 .variant-row {
   margin-bottom: 15px;
 }
 
-.builds-row {
-  background-color: #ffffff;
-}
-
 .distro-col {
  text-align: right;
- height: 100%;
 }
 
-.active-build {
-  display: inline-block;
+.build-cols {
+  background-color: white;
 }
 
 .build {
@@ -30,8 +32,46 @@
   float: left;
 }
 
-.waterfall-grid {
-  background-color: #f3f3f3;
+.active-build {
+  display: inline-block;
+}
+
+.waterfall-box {
+  float: left;
+  margin-left: 1px;
+  margin-bottom: 1px;
+}
+
+.task-result{
+  display: table-cell;
+  height: @cell-height-minus-padding;
+  width: @cell-height-minus-padding;
+  &:hover {
+    opacity: .8;
+  }
+}
+
+.collapsed-bar {
+  height: 10px; 
+  width: 100%;
+}
+
+.task-summary {
+  width: 16.66%;
+  float: left;
+  text-align: center;
+  margin-bottom: 10px;
+  font-weight: bold;
+}
+
+.inactive-build {
+  text-transform: uppercase;
+  color: @gray6;
+  font-weight: bold;
+  font-size: 12px;
+  text-align: center;
+  width: 20%;
+  float: left;
 }
 
 .version-header {
@@ -107,32 +147,6 @@
     }
 }
 
-.waterfall-box {
-  float: left;
-  margin-left: 1px;
-  margin-bottom: 1px;
-}
-
-.task-result{
-  display: table-cell;
-  height: @cell-height-minus-padding;
-  width: @cell-height-minus-padding;
-  &:hover {
-    opacity: .8;
-  }
-}
-
-.collapsed-view-bar {
-  height: 10px; 
-  width: 100%;
-}
-
-.task-summary {
-  width: 16.66%;
-  float: left;
-  text-align: center;
-  margin-bottom: 10px;
-}
 
 .build-summary {
   height: @cell-height-minus-padding + 9;
@@ -142,24 +156,75 @@
   border: 1px solid #ccc;
 }
 
-.inactive-build {
-  text-transform: uppercase;
-  color: @gray6;
-  font-weight: bold;
-  font-size: 12px;
-  text-align: center;
-  padding-top: 12px;
-  width: 20%;
-  float: left;
-}
-
 @media(max-width: 991px) {
   .inactive-build {
     font-size: 10px;
   }
   .filter {
     width: 100%;
-  //  margin-bottom: 15px;
   }
 }
+
+
+
+
+/* Add this attribute to the element that needs a tooltip */
+[data-tooltip] {
+  position: relative;
+  z-index: 2;
+  cursor: pointer;
+}
+
+/* Hide the tooltip content by default */
+[data-tooltip]:before,
+[data-tooltip]:after {
+  visibility: hidden;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Position tooltip above the element */
+[data-tooltip]:before {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  margin-bottom: 5px;
+  padding: 2px;
+  width: @tooltip-width;
+  margin-left: @tooltip-left;
+  -webkit-border-radius: 3px;
+  -moz-border-radius: 3px;
+  border-radius: 3px;
+  background-color: #000;
+  background-color: hsla(0, 0%, 20%, 0.9);
+  color: #fff;
+  font-weight: normal;
+  content: attr(data-tooltip);
+  text-align: center;
+  font-size: 14px;
+  line-height: 1.2;
+}
+
+/* Triangle hack to make tooltip look like a speech bubble */
+[data-tooltip]:after {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  margin-left: -10px;
+  width: 0;
+  border-top: 5px solid #000;
+  border-top: 5px solid hsla(0, 0%, 20%, 0.9);
+  border-right: 5px solid transparent;
+  border-left: 5px solid transparent;
+  content: " ";
+  font-size: 0;
+  line-height: 0;
+}
+
+/* Show tooltip content on hover */
+  [data-tooltip]:hover:before,
+  [data-tooltip]:hover:after {
+    visibility: visible;
+    opacity: 1;
+  }
 

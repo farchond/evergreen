@@ -33,84 +33,97 @@ function preProcessData(data) {
 
 preProcessData(window.serverData);
 
-// A Task contains the information for a single task for a build, including the link to its page, and a tooltip
-class Task extends React.Component {
+// The Root class renders all components on the waterfall page, including the grid view and the filter and new page buttons
+// The one exception is the header, which is written in Angular and managed by menu.html
+class Root extends React.Component{
   render() {
-    var href = "/task/" + this.props.task.id;
-    var status = this.props.task.status;
-
     return (
-      <div data-tooltip="tooltip placeholder" className="waterfall-box"> 
-        <a href={href} className={"task-result " + status} />  
+      <div>
+        <Grid data={this.props.data} />
       </div>
     )
   }
 }
 
-// For each type of task status, a PartialProgressBar is rendered to only show that part of the bar
-// A set of PartialProgressBars make up the entire progress bar that is shown on the Waterfall page
-class PartialProgressBar extends React.Component {
+// The main class that binds to the root div. This contains all the distros, builds, and tasks
+class Grid extends React.Component{
   render() {
-    var percentage = (this.props.taskNum * 100) / this.props.total;
-    var strPercentage = percentage + '%';
-    var style = this.props.status;
+    var data = this.props.data;
+    return (
+      <div className="waterfall-grid ">
+        {
+          this.props.data.build_variants.map((x, i) => {
+            return <Variant key={x} data={data} variantIndex={i} variantDisplayName={x} />;
+          })
+        }
+      </div> 
+    )
+  }
+}
+
+// The class for each "row" of the waterfall page. Includes the build variant link, as well as the five columns
+// of versions.
+class Variant extends React.Component{
+  render() {
+    var data = this.props.data;
+    var variantIndex = this.props.variantIndex;
+    var variantId = getBuildByIds(data.unrolledVersionIndex, variantIndex, data).build_variant.id;
     
     return (
-      <div className={"progress-bar progress-bar-" + style} role="progressbar" style={{width:strPercentage}} />
-    )
-  }
-}
+      <div className="row variant-row">
 
-class Summary extends React.Component {
-  render() {
-    var status = this.props.status;
-    console.log(status);
-    return (
-      <div className={status + " task-summary"}>
-      {this.props.taskNum}
+        {/* column of build names */}
+        <div className="col-xs-2 build-variant-name distro-col"> 
+          <a href={"/build_variant/" + project + "/" + variantId}>
+            {this.props.variantDisplayName} 
+          </a> 
+        </div>
+
+        {/* 5 columns of versions */}
+        <div className="col-xs-10"> 
+          <div className="row build-cols">
+            {
+              data.versions.map((x,i) => {
+                return <Build key={x.ids[0]} data={data} variantIndex={variantIndex} versionIndex={i} />;
+              })
+            }
+          </div>
+        </div>
+
       </div>
     )
   }
 }
 
-// A CollapsedBuild contains a set of PartialProgressBars, which in turn make up a full progress bar
-// We iterate over the 6 different main types of task statuses, each of which have a different color association
-class CollapsedBuild extends React.Component {
+// Each Build class is one group of tasks for an version + build variant intersection
+// We case on whether or not a build is active or not, and return either an ActiveBuild or InactiveBuild respectively
+class Build extends React.Component{
   render() {
-    var build = getBuildByIds(this.props.versionIndex, this.props.variantIndex, this.props.data);
-    var taskStats = build.waterfallTaskStats;
-
-    var taskTypes = [ 
-                      ["success"      , taskStats.succeeded], 
-                      ["failed"       , taskStats.failed], 
-                      ["dispatched"      , taskStats.started], 
-                      ["system-failed", taskStats.timed_out],
-                      ["undispatched" , taskStats.undispatched], 
-                      ["inactive"     , taskStats.inactive]
-                    ];
-
-    taskTypes = _.filter(taskTypes,((x => { 
-      return x[1] > 0;
-    })));
-
-    var total = build.tasks.length;
-
+    var currentVersion = this.props.data.versions[this.props.versionIndex];
+    
+    if (currentVersion.rolled_up) {
+      return <InactiveBuild />;
+    }
+   
+    var isCollapsed = true; // Will add switch to change isCollapsed state 
+    
+    if (isCollapsed) {
+      var tasksToShow = ['failed','sytem-failed']; // Can be modified to show combinations of tasks by statuses
+      return (
+        <div className="build">
+          <ActiveBuild filters={tasksToShow} data={this.props.data} versionIndex={this.props.versionIndex} variantIndex={this.props.variantIndex} />
+          
+          <CollapsedBuild data={this.props.data} versionIndex={this.props.versionIndex} variantIndex={this.props.variantIndex}/>
+        </div>
+      )
+    } 
+    
+    //We have an active, uncollapsed build 
     return (
-      <div className="collapsed-view-bar">
-        {
-          taskTypes.map((x) => {
-            return <Summary key={x[0]} total={total} status={x[0]} taskNum={x[1]} />
-          }) 
-        }
+      <div className="build">
+        <ActiveBuild data={this.props.data} versionIndex={this.props.versionIndex} variantIndex={this.props.variantIndex} />
       </div>
     )
-  }
-}
-
-// All tasks are inactive, so we display the words "inactive build"
-class InactiveBuild extends React.Component {
-  render() {
-    return <div className="inactive-build"> inactive build </div>;
   }
 }
 
@@ -143,96 +156,72 @@ class ActiveBuild extends React.Component {
   }
 }
 
-// Each Build class is one group of tasks for an version + build variant intersection
-// We case on whether or not a build is active or not, and return either an ActiveBuild or InactiveBuild respectively
-class Build extends React.Component{
+// All tasks are inactive, so we display the words "inactive build"
+class InactiveBuild extends React.Component {
   render() {
-    var currentVersion = this.props.data.versions[this.props.versionIndex];
-    
-    if (currentVersion.rolled_up) {
-      return <InactiveBuild />;
-    }
-   
-    var isCollapsed = false; //Will add switch to change isCollapsed state 
-    
-    if (isCollapsed) {
-      var tasksToShow = ['failed','sytem-failed']; //Can be modified to show combinations of tasks by statuses
-      return (
-        <div className="build">
-          <ActiveBuild filters={tasksToShow} data={this.props.data} versionIndex={this.props.versionIndex} variantIndex={this.props.variantIndex} />
-          
-          <CollapsedBuild data={this.props.data} versionIndex={this.props.versionIndex} variantIndex={this.props.variantIndex}/>
-        </div>
-      )
-    } 
-    
-    //We have an active, uncollapsed build 
+    return <div className="inactive-build"> inactive build </div>;
+  }
+}
+
+// A Task contains the information for a single task for a build, including the link to its page, and a tooltip
+class Task extends React.Component {
+  render() {
+    var href = "/task/" + this.props.task.id;
+    var status = this.props.task.status;
+    var tooltipContent = this.props.task.display_name + " - " + status;
     return (
-      <div className="build">
-        <ActiveBuild data={this.props.data} versionIndex={this.props.versionIndex} variantIndex={this.props.variantIndex} />
+      <div data-tooltip={tooltipContent} className="waterfall-box"> 
+        <a href={href} className={"task-result " + status} />  
       </div>
     )
   }
 }
 
-// The class for each "row" of the waterfall page. Includes the build variant link, as well as the five columns
-// of versions.
-class Variant extends React.Component{
+// A CollapsedBuild contains a set of PartialProgressBars, which in turn make up a full progress bar
+// We iterate over the 5 different main types of task statuses, each of which have a different color association
+class CollapsedBuild extends React.Component {
   render() {
-    var data = this.props.data;
-    var variantIndex = this.props.variantIndex;
-    var variantId = getBuildByIds(data.unrolledVersionIndex, variantIndex, data).build_variant.id;
-    
+    var build = getBuildByIds(this.props.versionIndex, this.props.variantIndex, this.props.data);
+    var taskStats = build.waterfallTaskStats;
+
+    var taskTypes = [ 
+                      ["success"      , taskStats.succeeded], 
+                      ["dispatched"   , taskStats.started], 
+                      ["system-failed", taskStats.timed_out],
+                      ["undispatched" , taskStats.undispatched], 
+                      ["inactive"     , taskStats.inactive]
+                    ];
+
+    // Remove all task summaries that have 0 tasks
+    taskTypes = _.filter(taskTypes,((x => { 
+      return x[1] > 0;
+    })));
+
+    // Used for tooltips
+    var total = build.tasks.length;
+
     return (
-      <div className="row variant-row">
-
-        {/* column of build names */}
-        <div className="col-xs-2 build-variant-name distro-col"> 
-          <a href={"/build_variant/" + project + "/" + variantId}>
-            {this.props.variantDisplayName} 
-          </a> 
-        </div>
-
-        {/* 5 columns of versions */}
-        <div className="col-xs-10"> 
-          <div className="row builds-row">
-            {
-              data.versions.map((x,i) => {
-                return <Build key={x.ids[0]} data={data} variantIndex={variantIndex} versionIndex={i} />;
-              })
-            }
-          </div>
-        </div>
-
-      </div>
-    )
-  }
-}
-
-// The main class that binds to the root div. This contains all the distros, builds, and tasks
-class Grid extends React.Component{
-  render() {
-    var data = this.props.data;
-    return (
-      <div className="waterfall-grid">
+      <div className="collapsed-bar">
         {
-          this.props.data.build_variants.map((x, i) => {
-            return <Variant key={x} data={data} variantIndex={i} variantDisplayName={x} />;
-          })
+          taskTypes.map((x) => {
+            return <TaskSummary key={x[0]} total={total} status={x[0]} taskNum={x[1]} />
+          }) 
         }
-      </div> 
-    )
-  }
-}
-
-// The Root class renders all components on the waterfall page, including the grid view and the filter and new page buttons
-// The one exception is the header, which is written in Angular and managed by menu.html
-class Root extends React.Component{
-  render() {
-    return (
-      <div>
-        <Grid data={this.props.data} />
       </div>
     )
   }
 }
+
+// A TaskSummary is the class for one rolled up task type
+// A CollapsedBuild is comprised of an  array of contiguous TaskSummaries below individual failing tasks 
+class TaskSummary extends React.Component {
+  render() {
+    var status = this.props.status;
+    return (
+      <div className={status + " task-summary"}> 
+        +{this.props.taskNum}
+      </div>
+    )
+  }
+}
+
