@@ -35,7 +35,7 @@ func skipValue(r *http.Request) (int, error) {
 	return strconv.Atoi(toSkipStr)
 }
 
-// uiStatus determine task status label.
+// uiStatus determines task status label.
 func uiStatus(task waterfallTask) string {
 	switch task.Status {
 	case "started":
@@ -48,7 +48,7 @@ func uiStatus(task waterfallTask) string {
 		}
 	case "success":
 		return "success"
-	case "failed": //TODO: time to case on different kinds of failues: failed, system timed out, test timed out, system failure
+	case "failed":
 		return "failed"
 	case "dispatched":
 		return "dispatched"

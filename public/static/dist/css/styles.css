@@ -179,15 +179,6 @@ h3.section-heading {
 .progress-bar-failed {
   background-color: #d9534f;
 }
-.progress-bar-inactive {
-  background-color: #ebebed;
-}
-.progress-bar-undispatched {
-  background-color: #808080;
-}
-.progress-bar-started {
-  background-color: #ffb618;
-}
 .status-label {
   width: 100%;
   font-size: 18px;
