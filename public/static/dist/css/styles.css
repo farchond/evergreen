@@ -1922,13 +1922,20 @@ pre {
   float: left;
   background-color: #999;
 }
-.waterfall-grid {
+body {
   background-color: #f3f3f3;
+}
+.waterfall-root {
+  background-color: #f3f3f3;
+}
+.waterfall-grid {
+  width: 100%;
 }
 .variant-row {
   margin-bottom: 15px;
 }
 .distro-col {
+  padding-top: 10px;
   text-align: right;
 }
 .build-cols {
@@ -1937,13 +1944,25 @@ pre {
 .build {
   padding-top: 14px;
   padding-bottom: 8px;
-  padding-left: 6px;
   padding-right: 6px;
   width: 20%;
   float: left;
 }
+.build:last-child {
+  padding-right: 0px;
+}
 .active-build {
   display: inline-block;
+}
+.inactive-build {
+  text-transform: uppercase;
+  color: #dee0e3;
+  font-weight: bold;
+  font-size: 12px;
+  text-align: center;
+  width: 20%;
+  float: left;
+  padding-top: 10px;
 }
 .waterfall-box {
   float: left;
@@ -1969,25 +1988,18 @@ pre {
   margin-bottom: 10px;
   font-weight: bold;
 }
-.inactive-build {
-  text-transform: uppercase;
-  color: #dee0e3;
-  font-weight: bold;
-  font-size: 12px;
+.inactive-header {
   text-align: center;
-  width: 20%;
-  float: left;
 }
 .version-header {
   height: auto;
-  margin-bottom: 4px;
-  padding: 5px;
   text-overflow: ellipsis;
   overflow: hidden;
   font-size: 12px;
   border-top: 2px solid #ebebed;
   border-bottom: 2px solid #ebebed;
   font-weight: bold;
+  background-color: #f3f3f3;
 }
 .version-header.text-right {
   text-align: right;

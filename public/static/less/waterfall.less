@@ -7,8 +7,16 @@
 @tooltip-width: 150px;
 @tooltip-left: 0 - @tooltip-width / 2;
 
-.waterfall-grid {
+body {
   background-color: #f3f3f3;
+}
+
+.waterfall-root {
+  background-color: #f3f3f3;
+
+}
+.waterfall-grid {
+  width: 100%;
 }
 
 .variant-row {
@@ -16,6 +24,7 @@
 }
 
 .distro-col {
+ padding-top: 10px;
  text-align: right;
 }
 
@@ -26,15 +35,32 @@
 .build {
   padding-top: 14px;
   padding-bottom: 8px;
-  padding-left: 6px;
+  //padding-left: 6px;
   padding-right: 6px;
   width: 20%;
   float: left;
 }
 
+.build:last-child {
+  padding-right: 0px;
+}
+
 .active-build {
   display: inline-block;
+ // float: left;
 }
+
+.inactive-build {
+  text-transform: uppercase;
+  color: @gray6;
+  font-weight: bold;
+  font-size: 12px;
+  text-align: center;
+  width: 20%;
+  float: left;
+  padding-top: 10px;
+}
+
 
 .waterfall-box {
   float: left;
@@ -64,26 +90,21 @@
   font-weight: bold;
 }
 
-.inactive-build {
-  text-transform: uppercase;
-  color: @gray6;
-  font-weight: bold;
-  font-size: 12px;
+.inactive-header {
   text-align: center;
-  width: 20%;
-  float: left;
 }
 
 .version-header {
     height: auto;
-    margin-bottom: 4px;
-    padding: 5px;
+    //margin-bottom: 4px;
+    //padding: 5px;
     text-overflow: ellipsis;
     overflow: hidden;
     font-size: 12px;
     border-top: 2px solid @gray7;
     border-bottom: 2px solid @gray7;
     font-weight: bold;
+    background-color: #f3f3f3;
 
     &.text-right {
       text-align: right;

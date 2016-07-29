@@ -38,19 +38,121 @@ preProcessData(window.serverData);
 class Root extends React.Component{
   render() {
     return (
-      React.createElement("div", null, 
+      React.createElement("div", {className: "waterfall-root "}, 
+      /*  
+      <Headers data={this.props.data} /> 
+     */
         React.createElement(Grid, {data: this.props.data})
       )
     )
   }
 }
+/*
+class Headers extends React.Component{
+ render() {
+    return (
+      <div className="row">
+        {
+          this.props.data.versions.map((x) => {
+            if (x.rolled_up) return <RolledUpHeader />;
+            
+            return <VersionHeader currentVersion={x}/>
+            
+          })
+        }
+      </div>
+    )
+ } 
+}
+*/
+
+class RolledUpHeader extends React.Component{
+  render() {
+    return (
+      React.createElement("div", null, " rolled up header ")
+    )
+  }
+}
+
+// Renders the git commit summary for one version
+class VersionHeader extends React.Component{
+  render() {
+    var currVersion = this.props.currentVersion;
+    //var currVersion = this.props.data.versions[this.props.versionIndex];
+    var message = currVersion.messages[0];
+
+    if (currVersion.rolled_up) {
+      var versiontitle = currVersion.messages.length > 1 ? "versions" : "version";
+      var rolled_header = currVersion.messages.length + " inactive " + versiontitle; 
+      message = rolled_header;
+      console.log("rolled up");
+      return (
+        React.createElement("div", {className: "col-xs-2 inactive-header"}, 
+        message
+        )
+      )
+    }
+    else {
+      var author = currVersion.authors[0];
+      var id_link = "/version/" + currVersion.ids[0];
+      var commit = currVersion.revisions[0].substring(0,5);
+      var shortened_message = currVersion.messages[0].substring(0,35);
+    
+      var date_time = new Date(currVersion.create_times[0]);
+      var formatted_time = date_time.toLocaleDateString('en-US', {
+        month : 'numeric',
+        day : 'numeric',
+        year : '2-digit',
+        hour : '2-digit',
+        minute : '2-digit'
+      }).replace(",","");
+    }
+    
+    return (
+    React.createElement("div", {className: "col-xs-2"}, 
+        React.createElement("div", {className: "version-header-expanded"}, 
+        React.createElement("div", null, 
+          React.createElement("span", {className: "btn btn-default btn-hash history-item-revision"}, 
+            React.createElement("a", {href: id_link}, commit)
+          ), 
+          formatted_time
+        ), 
+         React.createElement("span", {style: {fontWeight: "bold"}}, " ", author, " - "), 
+        shortened_message
+      )
+    )
+    )
+  }
+}
+
+
+// The class which renders the "Variant" and git commit summary headers
+class Headers extends React.Component{
+  render() {
+    return (
+    React.createElement("div", {className: "row version-header"}, 
+      React.createElement("div", {classID: "build-variant-col", className: "col-xs-2 version-header-full text-right"}, 
+        "Variant"
+      ), 
+      
+        this.props.data.versions.map(function(x,i){
+        return React.createElement(VersionHeader, {key: x.ids[0], currentVersion: x, versionIndex: i})
+        }), 
+      
+      React.createElement("br", null)
+    )
+    )
+  }
+}
+
+
 
 // The main class that binds to the root div. This contains all the distros, builds, and tasks
 class Grid extends React.Component{
   render() {
     var data = this.props.data;
     return (
-      React.createElement("div", {className: "waterfall-grid "}, 
+      React.createElement("div", {className: "waterfall-grid"}, 
         
           this.props.data.build_variants.map((x, i) => {
             return React.createElement(Variant, {key: x, data: data, variantIndex: i, variantDisplayName: x});
@@ -102,7 +204,7 @@ class Build extends React.Component{
     var currentVersion = this.props.data.versions[this.props.versionIndex];
     
     if (currentVersion.rolled_up) {
-      return React.createElement(InactiveBuild, null);
+      return React.createElement(InactiveBuild, {className: "build"});
     }
    
     var isCollapsed = false; // Will add switch to change isCollapsed state 
