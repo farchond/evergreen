@@ -105,7 +105,7 @@ class Build extends React.Component{
       return React.createElement(InactiveBuild, null);
     }
    
-    var isCollapsed = true; // Will add switch to change isCollapsed state 
+    var isCollapsed = false; // Will add switch to change isCollapsed state 
     
     if (isCollapsed) {
       var tasksToShow = ['failed','sytem-failed']; // Can be modified to show combinations of tasks by statuses
