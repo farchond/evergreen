@@ -38,38 +38,72 @@ preProcessData(window.serverData);
 class Root extends React.Component{
   render() {
     return (
-      <div className="waterfall-root ">
-      {/*  
-      <Headers data={this.props.data} /> 
-     */}
+      <div> 
+        <Headers data={this.props.data} /> 
         <Grid data={this.props.data} />
       </div>
     )
   }
 }
-/*
-class Headers extends React.Component{
- render() {
+
+class TestPop extends React.Component{
+  componentDidMount() {
+    var elem = '<div class="well"><a href="google.com">Message one, From someone.</a></div>'+
+          '<div class="well"><a href="google.com">Message one, From someone.</a></div>'+
+              '<button id="close-popover" data-toggle="clickover" class="btn btn-small btn-primary pull-right" onclick="$(&quot;#meddelanden&quot;).popover(&quot;hide&quot;);">Close please!</button>';
+    var testelem = '<div> hello </div>';
+    $('#meddelanden').popover({animation:true, content:testelem, html:true});  
+    console.log("we mounted");
+  }
+  render() {
+
+
     return (
-      <div className="row">
-        {
-          this.props.data.versions.map((x) => {
-            if (x.rolled_up) return <RolledUpHeader />;
-            
-            return <VersionHeader currentVersion={x}/>
-            
-          })
-        }
+      <div>
+      <div style={{marginTop:"100px", marginLeft:"100px"}}>
+          <ul>
+         <li className="in-row">
+                <a href="#" id="meddelanden" data-title="Meddelanden" data-toggle="clickover" 
+                          data-placement="right"><i className="icon-globe"></i></a>
+                                                  </li>
+                                                      </ul>
+                                                      </div>
       </div>
     )
- } 
+  }
 }
-*/
+// The class which renders the "Variant" and git commit summary headers
+class Headers extends React.Component{
+  render() {
+    return (
+    <div className="row version-header">
+      <div classID="build-variant-col" className="col-xs-2 version-header-full text-right">
+        Variant
+      </div>
+      {
+        this.props.data.versions.map(function(x,i){
+        return <VersionHeader key={x.ids[0]} currentVersion={x} versionIndex={i}/>
+        })
+      }
+      <br/>
+    </div>
+    )
+  }
+}
 
 class RolledUpHeader extends React.Component{
   render() {
+
+var Alert = ReactBootstrap.Alert;
+var Popover = ReactBootstrap.Popover;
+var ButtonToolbar = ReactBootstrap.ButtonToolbar;
+var OverlayTrigger = ReactBootstrap.OverlayTrigger;
+var Button = ReactBootstrap.Button;
+
     return (
-      <div> rolled up header </div>
+      <div className="col-xs-2 inactive-header"> 
+        {this.props.message} 
+      </div>
     )
   }
 }
@@ -85,11 +119,8 @@ class VersionHeader extends React.Component{
       var versiontitle = currVersion.messages.length > 1 ? "versions" : "version";
       var rolled_header = currVersion.messages.length + " inactive " + versiontitle; 
       message = rolled_header;
-      console.log("rolled up");
       return (
-        <div className="col-xs-2 inactive-header">
-        {message}
-        </div>
+        <RolledUpHeader message={message}/>
       )
     }
     else {
@@ -125,25 +156,6 @@ class VersionHeader extends React.Component{
   }
 }
 
-
-// The class which renders the "Variant" and git commit summary headers
-class Headers extends React.Component{
-  render() {
-    return (
-    <div className="row version-header">
-      <div classID="build-variant-col" className="col-xs-2 version-header-full text-right">
-        Variant
-      </div>
-      {
-        this.props.data.versions.map(function(x,i){
-        return <VersionHeader key={x.ids[0]} currentVersion={x} versionIndex={i}/>
-        })
-      }
-      <br/>
-    </div>
-    )
-  }
-}
 
 
 

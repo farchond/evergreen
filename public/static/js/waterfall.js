@@ -38,38 +38,72 @@ preProcessData(window.serverData);
 class Root extends React.Component{
   render() {
     return (
-      React.createElement("div", {className: "waterfall-root "}, 
-      /*  
-      <Headers data={this.props.data} /> 
-     */
+      React.createElement("div", null, 
+        React.createElement(Headers, {data: this.props.data}), 
         React.createElement(Grid, {data: this.props.data})
       )
     )
   }
 }
-/*
-class Headers extends React.Component{
- render() {
+
+class TestPop extends React.Component{
+  componentDidMount() {
+    var elem = '<div class="well"><a href="google.com">Message one, From someone.</a></div>'+
+          '<div class="well"><a href="google.com">Message one, From someone.</a></div>'+
+              '<button id="close-popover" data-toggle="clickover" class="btn btn-small btn-primary pull-right" onclick="$(&quot;#meddelanden&quot;).popover(&quot;hide&quot;);">Close please!</button>';
+    var testelem = '<div> hello </div>';
+    $('#meddelanden').popover({animation:true, content:testelem, html:true});  
+    console.log("we mounted");
+  }
+  render() {
+
+
     return (
-      <div className="row">
-        {
-          this.props.data.versions.map((x) => {
-            if (x.rolled_up) return <RolledUpHeader />;
-            
-            return <VersionHeader currentVersion={x}/>
-            
-          })
-        }
-      </div>
+      React.createElement("div", null, 
+      React.createElement("div", {style: {marginTop:"100px", marginLeft:"100px"}}, 
+          React.createElement("ul", null, 
+         React.createElement("li", {className: "in-row"}, 
+                React.createElement("a", {href: "#", id: "meddelanden", "data-title": "Meddelanden", "data-toggle": "clickover", 
+                          "data-placement": "right"}, React.createElement("i", {className: "icon-globe"}))
+                                                  )
+                                                      )
+                                                      )
+      )
     )
- } 
+  }
 }
-*/
+// The class which renders the "Variant" and git commit summary headers
+class Headers extends React.Component{
+  render() {
+    return (
+    React.createElement("div", {className: "row version-header"}, 
+      React.createElement("div", {classID: "build-variant-col", className: "col-xs-2 version-header-full text-right"}, 
+        "Variant"
+      ), 
+      
+        this.props.data.versions.map(function(x,i){
+        return React.createElement(VersionHeader, {key: x.ids[0], currentVersion: x, versionIndex: i})
+        }), 
+      
+      React.createElement("br", null)
+    )
+    )
+  }
+}
 
 class RolledUpHeader extends React.Component{
   render() {
+
+var Alert = ReactBootstrap.Alert;
+var Popover = ReactBootstrap.Popover;
+var ButtonToolbar = ReactBootstrap.ButtonToolbar;
+var OverlayTrigger = ReactBootstrap.OverlayTrigger;
+var Button = ReactBootstrap.Button;
+
     return (
-      React.createElement("div", null, " rolled up header ")
+      React.createElement("div", {className: "col-xs-2 inactive-header"}, 
+        this.props.message
+      )
     )
   }
 }
@@ -85,11 +119,8 @@ class VersionHeader extends React.Component{
       var versiontitle = currVersion.messages.length > 1 ? "versions" : "version";
       var rolled_header = currVersion.messages.length + " inactive " + versiontitle; 
       message = rolled_header;
-      console.log("rolled up");
       return (
-        React.createElement("div", {className: "col-xs-2 inactive-header"}, 
-        message
-        )
+        React.createElement(RolledUpHeader, {message: message})
       )
     }
     else {
@@ -125,25 +156,6 @@ class VersionHeader extends React.Component{
   }
 }
 
-
-// The class which renders the "Variant" and git commit summary headers
-class Headers extends React.Component{
-  render() {
-    return (
-    React.createElement("div", {className: "row version-header"}, 
-      React.createElement("div", {classID: "build-variant-col", className: "col-xs-2 version-header-full text-right"}, 
-        "Variant"
-      ), 
-      
-        this.props.data.versions.map(function(x,i){
-        return React.createElement(VersionHeader, {key: x.ids[0], currentVersion: x, versionIndex: i})
-        }), 
-      
-      React.createElement("br", null)
-    )
-    )
-  }
-}
 
 
 

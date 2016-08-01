@@ -15,6 +15,12 @@
     "grunt-jsx": "^0.1.8",
     "grunt-react": "^0.12.3",
     "grunt-reactjsx": "^0.2.4",
-    "load-grunt-tasks": "^3.5.0"
+    "load-grunt-tasks": "^3.5.0",
+    "react": "^15.3.0",
+    "react-bootstrap": "^0.30.0",
+    "react-dom": "^15.3.0"
+  },
+  "dependencies": {
+    "react-bootstrap": "^0.30.0"
   }
 }
