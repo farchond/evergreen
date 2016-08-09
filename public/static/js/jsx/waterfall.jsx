@@ -44,15 +44,10 @@ class Root extends React.Component{
     this.setState({hidden: opposite});
   }
   render() {
-    var toolbarData = {collapsed : this.state.collapsed,
-                       onCheck : this.handleCollapseChange};
-    var headerData = {hidden : this.state.hidden,
-                      versions : this.props.data.versions,
-                      onHide : this.handleHideChange};
     return (
       <div> 
-        <Toolbar data={this.props.data} collapsed={this.state.collapsed} onCheck={this.handleCollapseChange} toolbarData={toolbarData} />
-        <Headers headerData={headerData} /> 
+        <Toolbar collapsed={this.state.collapsed} onCheck={this.handleCollapseChange}/>
+        <Headers hidden={this.state.hidden} versions={this.props.data.versions} onHide={this.handleHideChange} /> 
         <Grid data={this.props.data} collapsed={this.state.collapsed} project={this.props.project} />
       </div>
     )
@@ -61,9 +56,9 @@ class Root extends React.Component{
 
 /*** START OF WATERFALL TOOLBAR ***/
 
-const Toolbar = ({toolbarData}) => {
+const Toolbar = ({collapsed, onCheck}) => {
   return (
-    <CollapseButton collapsed={toolbarData.collapsed} onCheck={toolbarData.onCheck}  /> 
+    <CollapseButton collapsed={collapsed} onCheck={onCheck}  /> 
   )
 };
 
@@ -91,23 +86,20 @@ class CollapseButton extends React.Component{
 
 /*** START OF WATERFALL HEADERS ***/
 
-function Headers ({headerData}) {
-  versionIds = _.keys(headerData.versions);
+function Headers ({hidden, versions, onHide}) {
+  versionIds = _.keys(versions);
   return (
   <div className="row version-header">
     <div className="variant-col col-xs-2 version-header-full text-right">
       Variant
     </div>
     {
-      _.map(headerData.versions, function(version, id){
+      _.map(versions, function(version, id){
         if (version.rolled_up) {
           return <RolledUpVersionHeader key={id} version={version} />
         }
         // Unrolled up version, no popover
-        versionData = {version : version,
-                       hidden : headerData.hidden,
-                        onHide : headerData.onHide};
-        return <ActiveVersionHeader key={id} version={version} versionData={versionData} />;
+        return <ActiveVersionHeader key={id} version={version} hidden={hidden} onHide={onHide} />;
       })
     }
     <br/>
@@ -115,9 +107,7 @@ function Headers ({headerData}) {
   )
 }
 
-function ActiveVersionHeader({versionData}) {
-  var version = versionData.version;
-
+function ActiveVersionHeader({version, hidden, onHide}) {
   var message = version.messages[0];
   var author = version.authors[0];
   var id_link = "/version/" + version.ids[0];
@@ -125,8 +115,8 @@ function ActiveVersionHeader({versionData}) {
   var message = version.messages[0]; 
   var formatted_time = getFormattedTime(new Date(version.create_times[0]));
   
-  // Casing on whether or not we show the shortened commit descripton
-  if (versionData.hidden) message = message.substring(0,35) + "...";
+  //If we hide the full commit message, only take the first 35 chars
+  if (hidden) message = message.substring(0,35) + "...";
 
   return (
       <div className="col-xs-2">
@@ -138,7 +128,7 @@ function ActiveVersionHeader({versionData}) {
             {formatted_time}
           </div>
           {author} - {message}
-          <HideHeaderButton onHide={versionData.onHide} hidden={versionData.hidden} />
+          <HideHeaderButton onHide={onHide} hidden={hidden} />
         </div>
       </div>
   )
