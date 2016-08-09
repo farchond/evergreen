@@ -155,8 +155,8 @@ function RolledUpVersionHeader({version}){
   var OverlayTrigger = ReactBootstrap.OverlayTrigger;
   var Button = ReactBootstrap.Button;
   
-  var versionTitle = version.messages.length > 1 ? "versions" : "version";
-  var rolledHeader = version.messages.length + " inactive " + versionTitle; 
+  var versionStr = (version.messages.length > 1) ? "versions" : "version";
+  var rolledHeader = version.messages.length + " inactive " + versionStr; 
  
   const popovers = (
     React.createElement(Popover, {id: "popover-positioned-bottom", title: ""}, 
