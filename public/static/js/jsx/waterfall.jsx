@@ -6,8 +6,7 @@
 // Preprocess the data given by the server 
 // Sort the array of builds for each version, as well as the array of build variants
 function preProcessData(data) {
-  //Sort the build variants that Grid uses to show the build column on the left-hand side
-  data.build_variants = data.build_variants.sort();
+  data.build_variants = _.sortBy(data.build_variants, 'display_name');
 }
 
 // Returns string from datetime object in "5/7/96 1:15 AM" format
@@ -31,23 +30,20 @@ preProcessData(window.serverData);
 class Root extends React.Component{
   constructor(props){
     super(props);
-    this.state = {collapsed : false,
-                  hidden    : true};
+    this.state = {collapsed: false};
     this.handleCollapseChange = this.handleCollapseChange.bind(this);
-    this.handleHideChange = this.handleHideChange.bind(this);
   }
   handleCollapseChange(collapsed) {
     this.setState({collapsed: collapsed});
   }
-  handleHideChange(hidden) {
-    var opposite = !hidden;
-    this.setState({hidden: opposite});
-  }
   render() {
+    var toolbarData = {collapsed : this.state.collapsed,
+                       onCheck : this.handleCollapseChange};
+
     return (
       <div> 
-        <Toolbar collapsed={this.state.collapsed} onCheck={this.handleCollapseChange}/>
-        <Headers hidden={this.state.hidden} versions={this.props.data.versions} onHide={this.handleHideChange} /> 
+        <Toolbar data={this.props.data} collapsed={this.state.collapsed} onCheck={this.handleCollapseChange} toolbarData={toolbarData} stuff={"hellolol"} things={"nope"}/>
+        <Headers versions={this.props.data.versions}/> 
         <Grid data={this.props.data} collapsed={this.state.collapsed} project={this.props.project} />
       </div>
     )
@@ -56,9 +52,9 @@ class Root extends React.Component{
 
 /*** START OF WATERFALL TOOLBAR ***/
 
-const Toolbar = ({collapsed, onCheck}) => {
+const Toolbar = ({toolbarData}) => {
   return (
-    <CollapseButton collapsed={collapsed} onCheck={onCheck}  /> 
+    <CollapseButton collapsed={toolbarData.collapsed} onCheck={toolbarData.onCheck}  /> 
   )
 };
 
@@ -86,20 +82,20 @@ class CollapseButton extends React.Component{
 
 /*** START OF WATERFALL HEADERS ***/
 
-function Headers ({hidden, versions, onHide}) {
-  versionIds = _.keys(versions);
+function Headers ({versions}) {
+  var versionList = _.sortBy(_.values(versions), 'revision_order').reverse();
   return (
   <div className="row version-header">
     <div className="variant-col col-xs-2 version-header-full text-right">
       Variant
     </div>
     {
-      _.map(versions, function(version, id){
+      _.map(versionList, function(version){
         if (version.rolled_up) {
-          return <RolledUpVersionHeader key={id} version={version} />
+          return <RolledUpVersionHeader key={version.ids[0]} version={version} />
         }
         // Unrolled up version, no popover
-        return <ActiveVersionHeader key={id} version={version} hidden={hidden} onHide={onHide} />;
+        return <ActiveVersionHeader key={version.ids[0]} version={version} />;
       })
     }
     <br/>
@@ -107,16 +103,16 @@ function Headers ({hidden, versions, onHide}) {
   )
 }
 
-function ActiveVersionHeader({version, hidden, onHide}) {
+function ActiveVersionHeader({version}) {
+  
   var message = version.messages[0];
   var author = version.authors[0];
   var id_link = "/version/" + version.ids[0];
   var commit = version.revisions[0].substring(0,5);
   var message = version.messages[0]; 
+  var shortened_message = version.messages[0].substring(0,35);
+
   var formatted_time = getFormattedTime(new Date(version.create_times[0]));
-  
-  //If we hide the full commit message, only take the first 35 chars
-  if (hidden) message = message.substring(0,35) + "...";
 
   return (
       <div className="col-xs-2">
@@ -127,36 +123,19 @@ function ActiveVersionHeader({version, hidden, onHide}) {
             </span>
             {formatted_time}
           </div>
-          {author} - {message}
-          <HideHeaderButton onHide={onHide} hidden={hidden} />
+          {author} - {shortened_message}
         </div>
       </div>
   )
 };
-
-class HideHeaderButton extends React.Component{
-  constructor(props){
-    super(props);
-    this.handleHide = this.handleHide.bind(this);
-  }
-  handleHide(event){
-    this.props.onHide(this.props.hidden);
-  }
-  render() {
-    var textToShow = this.props.hidden ? "more" : "less";
-    return (
-      <span onClick={this.handleHide}> <a href="#">{textToShow}</a> </span>
-    )
-  }
-}
 
 function RolledUpVersionHeader({version}){
   var Popover = ReactBootstrap.Popover;
   var OverlayTrigger = ReactBootstrap.OverlayTrigger;
   var Button = ReactBootstrap.Button;
   
-  var versionStr = (version.messages.length > 1) ? "versions" : "version";
-  var rolledHeader = version.messages.length + " inactive " + versionStr; 
+  var versionTitle = version.messages.length > 1 ? "versions" : "version";
+  var rolledHeader = version.messages.length + " inactive " + versionTitle; 
  
   const popovers = (
     <Popover id="popover-positioned-bottom" title="">
@@ -204,8 +183,8 @@ function Grid ({data, project, collapsed}) {
   return (
     <div className="waterfall-grid">
       {
-        _.map(data.rows, function (row, buildVariant){
-          return <Variant row={row} project={project} collapsed={collapsed} versions={data.versions} />;
+        data.build_variants.map(function(buildVariant){
+          return <Variant row={data.rows[buildVariant.id]} project={project} collapsed={collapsed} versions={data.versions} />;
         })
       }
     </div> 

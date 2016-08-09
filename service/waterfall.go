@@ -60,14 +60,14 @@ func uiStatus(task waterfallTask) string {
 type versionVariantData struct {
 	Rows          map[string]waterfallRow     `json:"rows"`
 	Versions      map[string]waterfallVersion `json:"versions"`
-	BuildVariants []string                    `json:"build_variants"`
+	BuildVariants []waterfallBuildVariant     `json:"build_variants"`
 }
 
 // waterfallData is all of the data that gets sent to the waterfall page on load
 type waterfallData struct {
 	Rows              map[string]waterfallRow     `json:"rows"`
 	Versions          map[string]waterfallVersion `json:"versions"`
-	BuildVariants     []string                    `json:"build_variants"`
+	BuildVariants     []waterfallBuildVariant     `json:"build_variants"`
 	TotalVersions     int                         `json:"total_versions"`      // total number of versions (for pagination)
 	CurrentSkip       int                         `json:"current_skip"`        // number of versions skipped so far
 	PreviousPageCount int                         `json:"previous_page_count"` // number of versions on previous page
@@ -131,11 +131,12 @@ type waterfallVersion struct {
 
 	// metadata about the enclosed versions.  if this version does not consist
 	// of multiple rolled-up versions, these will each only have length 1
-	Ids         []string    `json:"ids"`
-	Messages    []string    `json:"messages"`
-	Authors     []string    `json:"authors"`
-	CreateTimes []time.Time `json:"create_times"`
-	Revisions   []string    `json:"revisions"`
+	Ids                 []string    `json:"ids"`
+	Messages            []string    `json:"messages"`
+	Authors             []string    `json:"authors"`
+	CreateTimes         []time.Time `json:"create_times"`
+	Revisions           []string    `json:"revisions"`
+	RevisionOrderNumber int         `json:"revision_order"`
 
 	// used to hold any errors that were found in creating the version
 	Errors   []waterfallVersionError `json:"errors"`
@@ -237,6 +238,7 @@ func getVersionsAndVariants(skip, numVersionElements int, project *model.Project
 
 		// create the necessary versions, rolling up inactive ones
 		for _, v := range versionsFromDB {
+			fmt.Println(v.Id)
 
 			// if we have hit enough versions, break out
 			if len(finalVersions) == numVersionElements {
@@ -272,7 +274,7 @@ func getVersionsAndVariants(skip, numVersionElements int, project *model.Project
 			// builds for it
 			if !versionActive {
 				if lastRolledUpVersion == nil {
-					lastRolledUpVersion = &waterfallVersion{RolledUp: true}
+					lastRolledUpVersion = &waterfallVersion{RolledUp: true, RevisionOrderNumber: v.RevisionOrderNumber}
 				}
 
 				// add the version metadata into the last rolled-up version
@@ -318,14 +320,15 @@ func getVersionsAndVariants(skip, numVersionElements int, project *model.Project
 			// if the version can not be rolled up, create a fully fledged
 			// version for it
 			activeVersion := waterfallVersion{
-				Ids:         []string{v.Id},
-				Messages:    []string{v.Message},
-				Authors:     []string{v.Author},
-				CreateTimes: []time.Time{v.CreateTime},
-				Revisions:   []string{v.Revision},
-				Errors:      []waterfallVersionError{{v.Errors}},
-				Warnings:    []waterfallVersionError{{v.Warnings}},
-				Ignoreds:    []bool{v.Ignored},
+				Ids:                 []string{v.Id},
+				Messages:            []string{v.Message},
+				Authors:             []string{v.Author},
+				CreateTimes:         []time.Time{v.CreateTime},
+				Revisions:           []string{v.Revision},
+				Errors:              []waterfallVersionError{{v.Errors}},
+				Warnings:            []waterfallVersionError{{v.Warnings}},
+				Ignoreds:            []bool{v.Ignored},
+				RevisionOrderNumber: v.RevisionOrderNumber,
 			}
 
 			// add the builds to the waterfall row
@@ -367,13 +370,13 @@ func getVersionsAndVariants(skip, numVersionElements int, project *model.Project
 	}
 
 	// create the list of display names for the build variants represented
-	buildVariants := []string{}
+	buildVariants := []waterfallBuildVariant{}
 	for name := range bvSet {
 		displayName := buildVariantMappings[name]
 		if displayName == "" {
 			displayName = name + " (removed)"
 		}
-		buildVariants = append(buildVariants, displayName)
+		buildVariants = append(buildVariants, waterfallBuildVariant{Id: name, DisplayName: displayName})
 	}
 
 	return versionVariantData{
@@ -392,15 +395,15 @@ func fetchVersionsAndAssociatedBuilds(project *model.Project, skip int, numVersi
 	// fetch the versions from the db
 	versionsFromDB, err := version.Find(version.ByProjectId(project.Identifier).
 		WithFields(
-			version.RevisionKey,
-			version.ErrorsKey,
-			version.WarningsKey,
-			version.IgnoredKey,
-			version.MessageKey,
-			version.AuthorKey,
-			version.RevisionOrderNumberKey,
-			version.CreateTimeKey,
-		).Sort([]string{"-" + version.RevisionOrderNumberKey}).Skip(skip).Limit(numVersions))
+		version.RevisionKey,
+		version.ErrorsKey,
+		version.WarningsKey,
+		version.IgnoredKey,
+		version.MessageKey,
+		version.AuthorKey,
+		version.RevisionOrderNumberKey,
+		version.CreateTimeKey,
+	).Sort([]string{"-" + version.RevisionOrderNumberKey}).Skip(skip).Limit(numVersions))
 
 	if err != nil {
 		return nil, nil, fmt.Errorf("error fetching versions from database: %v", err)
