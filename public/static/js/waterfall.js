@@ -55,33 +55,41 @@ preProcessData(window.serverData);
 class Root extends React.Component{
   constructor(props){
     super(props);
-    this.state = {collapsed: false};
+    // Shortened cases on whether "more" or "less" is shown for the version headers
+    // Collapsed cases on whether we see the collapsed builds or the full ones
+    this.state = {shortened : false,
+                  collapsed : false};
     this.handleCollapseChange = this.handleCollapseChange.bind(this);
   }
   handleCollapseChange(collapsed) {
     this.setState({collapsed: collapsed});
   }
+  handleShortenedHeaders(shortened) {
+    this.setState({headers: shortened});
+  }
   render() {
-    var toolbarData = {collapsed : this.state.collapsed,
-                       onCheck : this.handleCollapseChange};
+    var toolbarData =  {collapsed : this.state.collapsed,
+      onCheck : this.handleCollapseChange};
+    var headersData = {versions : this.props.data.versions};
+                 //     shortened : this.state.shortened};
     var gridData = {data : this.props.data,
                     collapsed : this.state.collapsed};
     return (
       React.createElement("div", null, 
-        React.createElement(Toolbar, {data: this.props.data, collapsed: this.state.collapsed, onCheck: this.handleCollapseChange, toolbarData: toolbarData, stuff: "hellolol", things: "nope"}), 
-        React.createElement(Headers, {versions: this.props.data.versions}), 
+        React.createElement(Toolbar, {toolbarData: toolbarData}), 
+        React.createElement(Headers, {headersData: headersData}), 
         React.createElement(Grid, {gridData: gridData})
       )
-    )
+    );
   }
 }
 
 /*** START OF WATERFALL TOOLBAR ***/
 
-const Toolbar = ({toolbarData}) => {
+function Toolbar({ toolbarData }) {
   return (
     React.createElement(CollapseButton, {collapsed: toolbarData.collapsed, onCheck: toolbarData.onCheck}) 
-  )
+  );
 };
 
 class CollapseButton extends React.Component{
@@ -102,22 +110,39 @@ class CollapseButton extends React.Component{
           ref: "collapsedBuilds", 
           onChange: this.handleChange})
       )
-    )
+    );
   }
+}
+
+class CollapseHeaders extends React.Component{
+  constructor(props){
+    super(props);
+    this.handleChange = this.handleChange.bind(this);
+  }
+  handleChange(event){
+    this.props.onCheck(!this.props.shortened);
+  }
+  render() {
+    var text = this.props.shortened ? "more" : "less";
+    console.log(text);
+    return (
+      React.createElement("div", {onClick: this.handleChange}, " ", text, " ")
+    )
+  };
 }
 
 /*** START OF WATERFALL HEADERS ***/
 
-const Headers = ({versions}) => {
+function Headers({ headersData }) {
   return (
   React.createElement("div", {className: "row version-header"}, 
     React.createElement("div", {className: "variant-col col-xs-2 version-header-full text-right"}, 
       "Variant"
     ), 
     
-      versions.map((version,i) => {
+      headersData.versions.map((version,i) => {
         if (version.rolled_up) {
-          return React.createElement(RolledUpVersionHeader, {key: version.ids[0], version: version})
+          return React.createElement(RolledUpVersionHeader, {key: version.ids[0], version: version});
         }
         // Unrolled up version, no popover
         return React.createElement(ActiveVersionHeader, {key: version.ids[0], version: version});
@@ -125,10 +150,10 @@ const Headers = ({versions}) => {
     
     React.createElement("br", null)
   )
-  )
+  );
 }
 
-const ActiveVersionHeader = ({version}) => {
+function ActiveVersionHeader({ version }) {
   var currVersion = version;
   var message = currVersion.messages[0];
 
@@ -150,12 +175,17 @@ const ActiveVersionHeader = ({version}) => {
             formatted_time
           ), 
           author, " - ", shortened_message
+        ), 
+        React.createElement("span", null, 
+          "more"
         )
       )
-  )
+  );
 };
 
-const RolledUpVersionHeader = ({version}) => {
+
+
+function RolledUpVersionHeader({ version }) {
   var Popover = ReactBootstrap.Popover;
   var OverlayTrigger = ReactBootstrap.OverlayTrigger;
   var Button = ReactBootstrap.Button;
@@ -172,7 +202,7 @@ const RolledUpVersionHeader = ({version}) => {
       
         currVersion.ids.map(function(x,i) {
           versionData.index = i;
-          return React.createElement(RolledUpVersionSummary, {versionData: versionData, currentVersion: currVersion, currentIndex: i})
+          return React.createElement(RolledUpVersionSummary, {versionData: versionData, currentVersion: currVersion, currentIndex: i});
         })
       
     )
@@ -186,10 +216,10 @@ const RolledUpVersionHeader = ({version}) => {
         )
       )
     )
-  )
+  );
 };
 
-const RolledUpVersionSummary = ({versionData}) => {
+function RolledUpVersionSummary({ versionData }) {
   var version = versionData.version;
   var i = versionData.index;
 
@@ -207,14 +237,14 @@ const RolledUpVersionSummary = ({versionData}) => {
       message, 
       React.createElement("br", null)
     )
-  )
+  );
 };
 
 /*** START OF WATERFALL GRID ***/
 
 // The main class that binds to the root div. This contains all the distros, builds, and tasks
 
-const Grid = ({gridData}) => {
+function Grid({ gridData }) {
   var data = gridData.data;
   var collapsed = gridData.collapsed;
   return (
@@ -225,7 +255,7 @@ const Grid = ({gridData}) => {
         })
       
     ) 
-  )
+  );
 };
 
 // The class for each "row" of the waterfall page. Includes the build variant link, as well as the five columns
@@ -256,20 +286,20 @@ class Variant extends React.Component{
                 buildData.build = getBuildByIds(i, variantIndex, data);
                 buildData.currentVersion = data.versions[i];
 
-                return React.createElement(Build, {key: x.ids[0], build: buildData})
+                return React.createElement(Build, {key: x.ids[0], build: buildData});
               })
             
           )
         )
 
       )
-    )
+    );
   }
 }
 
 // Each Build class is one group of tasks for an version + build variant intersection
 // We case on whether or not a build is active or not, and return either an ActiveBuild or InactiveBuild respectively
-const Build = ({build}) => {
+function Build({ build }) {
   
   if (build.currentVersion.rolled_up) {
     return React.createElement(InactiveBuild, {className: "build"});
@@ -285,7 +315,7 @@ const Build = ({build}) => {
         React.createElement(ActiveBuild, {buildData: buildData}), 
         React.createElement(CollapsedBuild, {buildData: buildData})
       )
-    )
+    );
   } 
   
   //We have an active, uncollapsed build 
@@ -293,11 +323,11 @@ const Build = ({build}) => {
     React.createElement("div", {className: "build"}, 
       React.createElement(ActiveBuild, {buildData: buildData})
     )
-  )
+  );
 }
 
 // At least one task in the version is non-inactive, so we display all build tasks with their appropiate colors signifying their status
-const ActiveBuild = ({buildData}) => {  
+function ActiveBuild({ buildData }) {  
   var tasks = buildData.build.tasks;
   var validTasks = buildData.filter;
 
@@ -320,18 +350,18 @@ const ActiveBuild = ({buildData}) => {
         })
       
     )
-  )
+  );
 }
 
 // All tasks are inactive, so we display the words "inactive build"
-const InactiveBuild = ({}) => {
+function InactiveBuild({ }) {
     return (
       React.createElement("div", {className: "inactive-build"}, " inactive build ")
-    )
+    );
 }
 
 // A Task contains the information for a single task for a build, including the link to its page, and a tooltip
-const Task = ({task}) => {
+function Task({ task }) {
   var status = task.status;
   var tooltipContent = task.display_name + " - " + status;
 
@@ -339,12 +369,12 @@ const Task = ({task}) => {
     React.createElement("div", {className: "waterfall-box"}, 
       React.createElement("a", {href: "/task/" + task.id, className: "task-result " + status})
     )
-  )
+  );
 }
 
 // A CollapsedBuild contains a set of PartialProgressBars, which in turn make up a full progress bar
 // We iterate over the 5 different main types of task statuses, each of which have a different color association
-const CollapsedBuild = ({buildData}) => {
+function CollapsedBuild({ buildData }) {
   var build = buildData.build;
   var taskStats = build.waterfallTaskStatusCount;
  
@@ -368,19 +398,19 @@ const CollapsedBuild = ({buildData}) => {
           var taskSummaryData = {};
           taskSummaryData.status = x[0];
           taskSummaryData.taskNum = x[1];
-          return React.createElement(TaskSummary, {key: x[0], taskSummaryData: taskSummaryData, total: build.tasks.length, status: x[0], taskNum: x[1]});
+          return React.createElement(TaskSummary, {key: x[0], taskSummaryData: taskSummaryData});
         }) 
       
     )
-  )
+  );
 }
 
 // A TaskSummary is the class for one rolled up task type
 // A CollapsedBuild is comprised of an  array of contiguous TaskSummaries below individual failing tasks 
-const TaskSummary = ({taskSummaryData}) => {
+function TaskSummary({ taskSummaryData }) {
   return (
     React.createElement("div", {className: taskSummaryData.status + " task-summary"}, 
       "+", taskSummaryData.taskNum
     )
-  )
+  );
 }
