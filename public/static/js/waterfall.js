@@ -31,20 +31,28 @@ preProcessData(window.serverData);
 class Root extends React.Component{
   constructor(props){
     super(props);
-    this.state = {collapsed: false};
+    this.state = {collapsed : false,
+                  hidden    : true};
     this.handleCollapseChange = this.handleCollapseChange.bind(this);
+    this.handleHideChange = this.handleHideChange.bind(this);
   }
   handleCollapseChange(collapsed) {
     this.setState({collapsed: collapsed});
   }
+  handleHideChange(hidden) {
+    var opposite = !hidden;
+    this.setState({hidden: opposite});
+  }
   render() {
     var toolbarData = {collapsed : this.state.collapsed,
                        onCheck : this.handleCollapseChange};
-
+    var headerData = {hidden : this.state.hidden,
+                      versions : this.props.data.versions,
+                      onHide : this.handleHideChange};
     return (
       React.createElement("div", null, 
-        React.createElement(Toolbar, {data: this.props.data, collapsed: this.state.collapsed, onCheck: this.handleCollapseChange, toolbarData: toolbarData, stuff: "hellolol", things: "nope"}), 
-        React.createElement(Headers, {versions: this.props.data.versions}), 
+        React.createElement(Toolbar, {data: this.props.data, collapsed: this.state.collapsed, onCheck: this.handleCollapseChange, toolbarData: toolbarData}), 
+        React.createElement(Headers, {headerData: headerData}), 
         React.createElement(Grid, {data: this.props.data, collapsed: this.state.collapsed, project: this.props.project})
       )
     )
@@ -83,20 +91,23 @@ class CollapseButton extends React.Component{
 
 /*** START OF WATERFALL HEADERS ***/
 
-function Headers ({versions}) {
-  versionIds = _.keys(versions);
+function Headers ({headerData}) {
+  versionIds = _.keys(headerData.versions);
   return (
   React.createElement("div", {className: "row version-header"}, 
     React.createElement("div", {className: "variant-col col-xs-2 version-header-full text-right"}, 
       "Variant"
     ), 
     
-      _.map(versions, function(version, id){
+      _.map(headerData.versions, function(version, id){
         if (version.rolled_up) {
           return React.createElement(RolledUpVersionHeader, {key: id, version: version})
         }
         // Unrolled up version, no popover
-        return React.createElement(ActiveVersionHeader, {key: id, version: version});
+        versionData = {version : version,
+                       hidden : headerData.hidden,
+                        onHide : headerData.onHide};
+        return React.createElement(ActiveVersionHeader, {key: id, version: version, versionData: versionData});
       }), 
     
     React.createElement("br", null)
@@ -104,16 +115,18 @@ function Headers ({versions}) {
   )
 }
 
-function ActiveVersionHeader({version}) {
-  
+function ActiveVersionHeader({versionData}) {
+  var version = versionData.version;
+
   var message = version.messages[0];
   var author = version.authors[0];
   var id_link = "/version/" + version.ids[0];
   var commit = version.revisions[0].substring(0,5);
   var message = version.messages[0]; 
-  var shortened_message = version.messages[0].substring(0,35);
-
   var formatted_time = getFormattedTime(new Date(version.create_times[0]));
+  
+  // Casing on whether or not we show the shortened commit descripton
+  if (versionData.hidden) message = message.substring(0,35) + "...";
 
   return (
       React.createElement("div", {className: "col-xs-2"}, 
@@ -124,11 +137,28 @@ function ActiveVersionHeader({version}) {
             ), 
             formatted_time
           ), 
-          author, " - ", shortened_message
+          author, " - ", message, 
+          React.createElement(HideHeaderButton, {onHide: versionData.onHide, hidden: versionData.hidden})
         )
       )
   )
 };
+
+class HideHeaderButton extends React.Component{
+  constructor(props){
+    super(props);
+    this.handleHide = this.handleHide.bind(this);
+  }
+  handleHide(event){
+    this.props.onHide(this.props.hidden);
+  }
+  render() {
+    var textToShow = this.props.hidden ? "more" : "less";
+    return (
+      React.createElement("span", {onClick: this.handleHide}, " ", React.createElement("a", {href: "#"}, textToShow), " ")
+    )
+  }
+}
 
 function RolledUpVersionHeader({version}){
   var Popover = ReactBootstrap.Popover;
