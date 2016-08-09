@@ -30,20 +30,22 @@ preProcessData(window.serverData);
 class Root extends React.Component{
   constructor(props){
     super(props);
-    this.state = {collapsed: false};
+    this.state = {collapsed: false,
+                  shortenCommitMessage: true};
     this.handleCollapseChange = this.handleCollapseChange.bind(this);
+    this.handleHeaderLinkClick = this.handleHeaderLinkClick.bind(this);
   }
   handleCollapseChange(collapsed) {
     this.setState({collapsed: collapsed});
   }
+  handleHeaderLinkClick(shortenMessage) {
+    this.setState({shortenCommitMessage: !shortenMessage});
+  }
   render() {
-    var toolbarData = {collapsed : this.state.collapsed,
-                       onCheck : this.handleCollapseChange};
-
     return (
       <div> 
-        <Toolbar data={this.props.data} collapsed={this.state.collapsed} onCheck={this.handleCollapseChange} toolbarData={toolbarData} stuff={"hellolol"} things={"nope"}/>
-        <Headers versions={this.props.data.versions}/> 
+        <Toolbar collapsed={this.state.collapsed} onCheck={this.handleCollapseChange} /> 
+        <Headers shortenCommitMessage={this.state.shortenCommitMessage} versions={this.props.data.versions} onLinkClick={this.handleHeaderLinkClick} /> 
         <Grid data={this.props.data} collapsed={this.state.collapsed} project={this.props.project} />
       </div>
     )
@@ -52,9 +54,9 @@ class Root extends React.Component{
 
 /*** START OF WATERFALL TOOLBAR ***/
 
-const Toolbar = ({toolbarData}) => {
+function Toolbar ({collapsed, onCheck}) {
   return (
-    <CollapseButton collapsed={toolbarData.collapsed} onCheck={toolbarData.onCheck}  /> 
+    <CollapseButton collapsed={collapsed} onCheck={onCheck}  /> 
   )
 };
 
@@ -82,7 +84,7 @@ class CollapseButton extends React.Component{
 
 /*** START OF WATERFALL HEADERS ***/
 
-function Headers ({versions}) {
+function Headers ({shortenCommitMessage, versions, onLinkClick}) {
   var versionList = _.sortBy(_.values(versions), 'revision_order').reverse();
   return (
   <div className="row version-header">
@@ -95,7 +97,7 @@ function Headers ({versions}) {
           return <RolledUpVersionHeader key={version.ids[0]} version={version} />
         }
         // Unrolled up version, no popover
-        return <ActiveVersionHeader key={version.ids[0]} version={version} />;
+        return <ActiveVersionHeader key={version.ids[0]} version={version} shortenCommitMessage={shortenCommitMessage} onLinkClick={onLinkClick} />;
       })
     }
     <br/>
@@ -103,16 +105,27 @@ function Headers ({versions}) {
   )
 }
 
-function ActiveVersionHeader({version}) {
-  
+function ActiveVersionHeader({shortenCommitMessage, version, onLinkClick}) {
   var message = version.messages[0];
   var author = version.authors[0];
   var id_link = "/version/" + version.ids[0];
   var commit = version.revisions[0].substring(0,5);
   var message = version.messages[0]; 
-  var shortened_message = version.messages[0].substring(0,35);
-
   var formatted_time = getFormattedTime(new Date(version.create_times[0]));
+
+  // If we shorten the commit message, only display the first 35 chars
+  if (shortenCommitMessage) {
+    var elipses = message.length > 35 ? "..." : "";
+    message = message.substring(0,35) + elipses; 
+  }
+ 
+  // Only show more/less buttons if the commit message is large enough 
+  var button;
+  if (message.length > 35) {
+    button = (
+       <HideHeaderButton onLinkClick={onLinkClick} shortenCommitMessage={shortenCommitMessage} />
+    );
+  }
 
   return (
       <div className="col-xs-2">
@@ -123,11 +136,28 @@ function ActiveVersionHeader({version}) {
             </span>
             {formatted_time}
           </div>
-          {author} - {shortened_message}
+          {author} - {message}
+          {button}
         </div>
       </div>
   )
 };
+
+class HideHeaderButton extends React.Component{
+  constructor(props){
+    super(props);
+    this.onLinkClick = this.onLinkClick.bind(this);
+  }
+  onLinkClick(event){
+    this.props.onLinkClick(this.props.shortenCommitMessage);
+  }
+  render() {
+    var textToShow = this.props.shortenCommitMessage ? "more" : "less";
+    return (
+      <span onClick={this.onLinkClick}> <a href="#">{textToShow}</a> </span>
+    )
+  }
+}
 
 function RolledUpVersionHeader({version}){
   var Popover = ReactBootstrap.Popover;
