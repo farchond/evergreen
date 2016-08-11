@@ -30,8 +30,32 @@ preProcessData(window.serverData);
 class Root extends React.Component{
   constructor(props){
     super(props);
+
+    // Initialize newer|older buttons
+    
+    var versionsOnPage = _.reduce(_.map(window.serverData.versions, function(version){return version.authors.length; }), function(memo,num) {return memo + num;});
+
+    var currentSkip = window.serverData.current_skip;
+    var nextSkip = currentSkip + versionsOnPage; 
+    var prevSkip = currentSkip - window.serverData.previous_page_count;
+   
+    this.nextURL = "";
+    this.prevURL = ""; 
+
+    // If nextSkip and currentSkip are valid, set a valid href for the buttons
+    // Otherwise, the two buttons remain disabled with an empty url
+    if (nextSkip < window.serverData.total_versions) {
+      this.nextURL = "/waterfall/" + this.props.project + "?skip=" + nextSkip;
+    }
+    
+    if (currentSkip > 0) {
+      this.prevURL = "/waterfall/" + this.props.project + "?skip=" + prevSkip;
+    }
+
+    // Handle state for a collapsed view, as well as shortened header commit messages
     this.state = {collapsed: false,
                   shortenCommitMessage: true};
+
     this.handleCollapseChange = this.handleCollapseChange.bind(this);
     this.handleHeaderLinkClick = this.handleHeaderLinkClick.bind(this);
   }
@@ -41,12 +65,26 @@ class Root extends React.Component{
   handleHeaderLinkClick(shortenMessage) {
     this.setState({shortenCommitMessage: !shortenMessage});
   }
+  
   render() {
     return (
       React.createElement("div", null, 
-        React.createElement(Toolbar, {collapsed: this.state.collapsed, onCheck: this.handleCollapseChange}), 
-        React.createElement(Headers, {shortenCommitMessage: this.state.shortenCommitMessage, versions: this.props.data.versions, onLinkClick: this.handleHeaderLinkClick}), 
-        React.createElement(Grid, {data: this.props.data, collapsed: this.state.collapsed, project: this.props.project})
+        React.createElement(Toolbar, {
+          collapsed: this.state.collapsed, 
+          onCheck: this.handleCollapseChange, 
+          nextURL: this.nextURL, 
+          prevURL: this.prevURL}
+        ), 
+        React.createElement(Headers, {
+          shortenCommitMessage: this.state.shortenCommitMessage, 
+          versions: this.props.data.versions, 
+          onLinkClick: this.handleHeaderLinkClick}
+        ), 
+        React.createElement(Grid, {
+          data: this.props.data, 
+          collapsed: this.state.collapsed, 
+          project: this.props.project}
+        )
       )
     )
   }
@@ -54,11 +92,32 @@ class Root extends React.Component{
 
 /*** START OF WATERFALL TOOLBAR ***/
 
-function Toolbar ({collapsed, onCheck}) {
+function Toolbar ({collapsed, onCheck, nextURL, prevURL}) {
   return (
-    React.createElement(CollapseButton, {collapsed: collapsed, onCheck: onCheck}) 
+    React.createElement("div", {className: "waterfall-toolbar"}, 
+      React.createElement("span", {className: "waterfall-text"}, " Waterfall "), 
+      React.createElement(CollapseButton, {collapsed: collapsed, onCheck: onCheck}), 
+      React.createElement(PageButtons, {nextURL: nextURL, prevURL: prevURL})
+    )
   )
 };
+
+function PageButtons ({prevURL, nextURL}) {
+  var ButtonGroup = ReactBootstrap.ButtonGroup;
+  return (
+    React.createElement(ButtonGroup, {className: "waterfall-page-buttons"}, 
+      React.createElement(PageButton, {pageURL: prevURL, disabled: prevURL === "", displayText: "newer"}), 
+      React.createElement(PageButton, {pageURL: nextURL, disabled: nextURL === "", displayText: "older"})
+    )
+  );
+}
+
+function PageButton ({pageURL, displayText, disabled}) {
+  var Button = ReactBootstrap.Button;
+  return (
+    React.createElement(Button, {href: pageURL, disabled: disabled, bsSize: "small"}, displayText)
+  );
+}
 
 class CollapseButton extends React.Component{
   constructor(props){
@@ -70,13 +129,15 @@ class CollapseButton extends React.Component{
   }
   render() {
     return (
-      React.createElement("label", {style: {display:"inline-block"}}, 
-        React.createElement("span", {style: {fontWeight:"normal"}}, "Show Collapsed View "), React.createElement("input", {style: {display:"inline"}, 
-          className: "checkbox", 
-          type: "checkbox", 
-          checked: this.props.collapsed, 
-          ref: "collapsedBuilds", 
-          onChange: this.handleChange})
+      React.createElement("label", {className: "waterfall-checkbox"}, 
+        React.createElement("span", null, "Show Collapsed View "), 
+          React.createElement("input", {
+            className: "checkbox waterfall-checkbox-input", 
+            type: "checkbox", 
+            checked: this.props.collapsed, 
+            ref: "collapsedBuilds", 
+            onChange: this.handleChange}
+          )
       )
     )
   }
@@ -94,10 +155,17 @@ function Headers ({shortenCommitMessage, versions, onLinkClick}) {
     
       _.map(versionList, function(version){
         if (version.rolled_up) {
-          return React.createElement(RolledUpVersionHeader, {key: version.ids[0], version: version})
+          return React.createElement(RolledUpVersionHeader, {key: version.ids[0], version: version});
         }
         // Unrolled up version, no popover
-        return React.createElement(ActiveVersionHeader, {key: version.ids[0], version: version, shortenCommitMessage: shortenCommitMessage, onLinkClick: onLinkClick});
+        return (
+          React.createElement(ActiveVersionHeader, {
+            key: version.ids[0], 
+            version: version, 
+            shortenCommitMessage: shortenCommitMessage, 
+            onLinkClick: onLinkClick}
+          )
+        );
       }), 
     
     React.createElement("br", null)

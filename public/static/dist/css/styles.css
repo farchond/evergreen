@@ -1928,12 +1928,30 @@ pre {
 .variant-row {
   margin-bottom: 15px;
 }
+.waterfall-toolbar {
+  margin-top: 15px;
+  margin-bottom: 8px;
+}
+.waterfall-text {
+  font-size: 18pt;
+  padding-right: 5px;
+  font-family: inherit;
+}
+.waterfall-page-buttons {
+  float: right;
+}
 .distro-col {
   padding-top: 10px;
   text-align: right;
 }
 .build-cols {
   border: 1px solid #dee0e3;
+}
+.waterfall-checkbox {
+  font-weight: normal;
+}
+.waterfall-checkbox-input {
+  display: inline;
 }
 .build {
   padding-top: 14px;
